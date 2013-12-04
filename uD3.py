@@ -1,8 +1,9 @@
 #This is used to query a JENCO 6230N pH meter
 #The command to query this pH meter is "S00"
 #The meter will respond with the a structured string of data
-#uDaq2 is meant to address some issues with sampling rate seen in uDaq 
-#It isn't clear if the low sampling (30Hz instead of 100 Hz) is due to graphing via matplotlib or latency in the hardware connections
+#uDaq3 is meant to address some issues with sampling rate seen in uDaq 
+#The lower sampling rate (30 Hz instead of the desired 100 Hz) is due to latency in reading data from the force transducer
+#graphing functions are removed in the OSx version due to the Mavericks update causing problems with pyplot
 
 import serial
 import io
@@ -55,11 +56,7 @@ def getTime():
 
 
 
-#Plotting not ready yet
-#Jenco data is parsed now
-#Need handling for error strings from JENCO6230N
-#Currently commented out the plot2 containing pH information; this is lower value than force 
-#Testing performance gains
+#plotting function removed until Mavericks-Python-Pyplot issue gets resolved
 
 #pltCount = 0
 #y=[0]
@@ -92,7 +89,10 @@ while counter <= (numDataPoints):
     countStr = str(counter)
     line = phSer.readline()
     milivoltVal = line[4:10] #the output from the JENCO6230N has fixed width so slicing works
-    phVal= line[12:17] #if you want to graph this on the same scale as force, you'll have to float() it and multiply by about 100
+    phVal= line[12:17]   #if you want to graph this on the same scale as force,
+#                                   you'll have to float() it and multiply by about 100; the pH
+#                                   meter can display errors that are text strings and not 
+#                                    floats, so converting to a float is not robust
     line = ForceSer.readline()
     forceVal = (1023-int(line))
 #    forceY.append(forceVal)
@@ -118,6 +118,8 @@ while counter <= (numDataPoints):
     output.write(data)
     counter += 1
     if phSer.isOpen()==False:
+        break
+    if ForceSer.isOpen()==False:
         break
 
 output.close()
